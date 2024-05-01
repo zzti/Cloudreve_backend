@@ -78,8 +78,11 @@ func (service *UserBatchService) Delete() serializer.Response {
 		// 删除WebDAV账号
 		model.DB.Where("user_id = ?", uid).Delete(&model.Webdav{})
 
-		// 删除此用户
-		model.DB.Unscoped().Delete(user)
+		// 删除此用户-硬删除
+		// model.DB.Unscoped().Delete(user)
+
+		// 删除此用户-软删除
+		model.DB.Delete(user)
 
 	}
 	return serializer.Response{}
