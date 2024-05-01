@@ -62,6 +62,7 @@ func InitStatic(statics fs.FS) {
 	// 检查静态资源的版本
 	f, err := StaticFS.Open("version.json")
 	if err != nil {
+		util.Log().Warning(util.RelativePath(StaticFolder))
 		util.Log().Warning("Missing version identifier file in static resources, please delete \"statics\" folder and rebuild it.")
 		return
 	}
