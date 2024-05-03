@@ -92,7 +92,7 @@ func GetRecursiveChildFolder(dirs []uint, uid uint, includeSelf bool) ([]Folder,
 	}
 
 	// 整理父目录的ID
-	var parentIDs = make([]uint, 0, len(parFolders))
+	parentIDs := make([]uint, 0, len(parFolders))
 	for _, folder := range parFolders {
 		parentIDs = append(parentIDs, folder.ID)
 	}
@@ -130,7 +130,8 @@ func GetRecursiveChildFolder(dirs []uint, uid uint, includeSelf bool) ([]Folder,
 
 // DeleteFolderByIDs 根据给定ID批量删除目录记录
 func DeleteFolderByIDs(ids []uint) error {
-	result := DB.Where("id in (?)", ids).Unscoped().Delete(&Folder{})
+	// result := DB.Where("id in (?)", ids).Unscoped().Delete(&Folder{})
+	result := DB.Where("id in (?)", ids).Delete(&Folder{})
 	return result.Error
 }
 
@@ -149,7 +150,7 @@ func (folder *Folder) MoveOrCopyFileTo(files []uint, dstFolder *Folder, isCopy b
 
 	if isCopy {
 		// 检索出要复制的文件
-		var originFiles = make([]File, 0, len(files))
+		originFiles := make([]File, 0, len(files))
 		if err := DB.Where(
 			"id in (?) and user_id = ? and folder_id = ?",
 			files,
@@ -183,7 +184,7 @@ func (folder *Folder) MoveOrCopyFileTo(files []uint, dstFolder *Folder, isCopy b
 		}
 
 	} else {
-		var updates = map[string]interface{}{
+		updates := map[string]interface{}{
 			"folder_id": dstFolder.ID,
 		}
 		// webdav目标名重置
@@ -207,7 +208,6 @@ func (folder *Folder) MoveOrCopyFileTo(files []uint, dstFolder *Folder, isCopy b
 	}
 
 	return copiedSize, nil
-
 }
 
 // CopyFolderTo 将此目录及其子目录及文件递归复制至dstFolder
@@ -220,13 +220,13 @@ func (folder *Folder) CopyFolderTo(folderID uint, dstFolder *Folder) (size uint6
 	}
 
 	// 抽离所有子目录的ID
-	var subFolderIDs = make([]uint, len(subFolders))
+	subFolderIDs := make([]uint, len(subFolders))
 	for key, value := range subFolders {
 		subFolderIDs[key] = value.ID
 	}
 
 	// 复制子目录
-	var newIDCache = make(map[uint]uint)
+	newIDCache := make(map[uint]uint)
 	for _, folder := range subFolders {
 		// 新的父目录指向
 		var newID uint
@@ -258,7 +258,7 @@ func (folder *Folder) CopyFolderTo(folderID uint, dstFolder *Folder) (size uint6
 	}
 
 	// 复制文件
-	var originFiles = make([]File, 0, len(subFolderIDs))
+	originFiles := make([]File, 0, len(subFolderIDs))
 	if err := DB.Where(
 		"user_id = ? and folder_id in (?)",
 		folder.OwnerID,
@@ -285,20 +285,18 @@ func (folder *Folder) CopyFolderTo(folderID uint, dstFolder *Folder) (size uint6
 	}
 
 	return size, nil
-
 }
 
 // MoveFolderTo 将folder目录下的dirs子目录复制或移动到dstFolder，
 // 返回此过程中增加的容量
 func (folder *Folder) MoveFolderTo(dirs []uint, dstFolder *Folder) error {
-
 	// 如果目标位置为待移动的目录，会导致 parent 为自己
 	// 造成死循环且无法被除搜索以外的组件展示
 	if folder.OwnerID == dstFolder.OwnerID && util.ContainsUint(dirs, dstFolder.ID) {
 		return errors.New("cannot move a folder into itself")
 	}
 
-	var updates = map[string]interface{}{
+	updates := map[string]interface{}{
 		"parent_id": dstFolder.ID,
 	}
 	// webdav目标名重置
@@ -315,7 +313,6 @@ func (folder *Folder) MoveFolderTo(dirs []uint, dstFolder *Folder) error {
 	).Update(updates).Error
 
 	return err
-
 }
 
 // Rename 重命名目录
@@ -335,12 +332,15 @@ func (folder *Folder) GetName() string {
 func (folder *Folder) GetSize() uint64 {
 	return 0
 }
+
 func (folder *Folder) ModTime() time.Time {
 	return folder.UpdatedAt
 }
+
 func (folder *Folder) IsDir() bool {
 	return true
 }
+
 func (folder *Folder) GetPosition() string {
 	return folder.Position
 }

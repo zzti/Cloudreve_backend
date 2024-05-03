@@ -244,7 +244,6 @@ func RemoveFilesWithSoftLinks(files []File) ([]File, error) {
 	}
 
 	return filteredFiles, nil
-
 }
 
 // DeleteFiles 批量删除文件记录并归还容量
@@ -259,7 +258,8 @@ func DeleteFiles(files []*File, uid uint) error {
 			return errors.New("user id not consistent")
 		}
 
-		result := tx.Unscoped().Where("size = ?", file.Size).Delete(file)
+		// result := tx.Unscoped().Where("size = ?", file.Size).Delete(file)
+		result := tx.Where("size = ?", file.Size).Delete(file)
 		if result.Error != nil {
 			tx.Rollback()
 			return result.Error
@@ -447,6 +447,7 @@ func (file *File) GetName() string {
 func (file *File) GetSize() uint64 {
 	return file.Size
 }
+
 func (file *File) ModTime() time.Time {
 	return file.UpdatedAt
 }
