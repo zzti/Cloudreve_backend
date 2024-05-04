@@ -134,11 +134,11 @@ func (fs *FileSystem) Move(ctx context.Context, dirs, files []uint, src, dst str
 // unlink 为 true 时只删除虚拟文件系统的文件记录，不删除物理文件。
 func (fs *FileSystem) Delete(ctx context.Context, dirs, files []uint, force, unlink bool) error {
 	// 已删除的文件ID
-	var deletedFiles = make([]*model.File, 0, len(fs.FileTarget))
+	deletedFiles := make([]*model.File, 0, len(fs.FileTarget))
 	// 删除失败的文件的父目录ID
 
 	// 所有文件的ID
-	var allFiles = make([]*model.File, 0, len(fs.FileTarget))
+	allFiles := make([]*model.File, 0, len(fs.FileTarget))
 
 	// 列出要删除的目录
 	if len(dirs) > 0 {
@@ -167,6 +167,10 @@ func (fs *FileSystem) Delete(ctx context.Context, dirs, files []uint, force, unl
 
 	// 按照存储策略分组删除对象
 	failed := make(map[uint][]string)
+
+	// unlink永远为真,不删除物理文件
+	unlink = true
+
 	if !unlink {
 		failed = fs.deleteGroupedFile(ctx, policyGroup)
 	}
@@ -204,7 +208,7 @@ func (fs *FileSystem) Delete(ctx context.Context, dirs, files []uint, force, unl
 
 	// 如果文件全部删除成功，继续删除目录
 	if len(deletedFiles) == len(allFiles) {
-		var allFolderIDs = make([]uint, 0, len(fs.DirTarget))
+		allFolderIDs := make([]uint, 0, len(fs.DirTarget))
 		for _, value := range fs.DirTarget {
 			allFolderIDs = append(allFolderIDs, value.ID)
 		}
@@ -278,7 +282,7 @@ func (fs *FileSystem) List(ctx context.Context, dirPath string, pathProcessor fu
 	}
 	fs.SetTargetDir(&[]model.Folder{*folder})
 
-	var parentPath = path.Join(folder.Position, folder.Name)
+	parentPath := path.Join(folder.Position, folder.Name)
 	var childFolders []model.Folder
 	var childFiles []model.File
 
@@ -309,9 +313,7 @@ func (fs *FileSystem) ListPhysical(ctx context.Context, dirPath string) ([]seria
 		return nil, err
 	}
 
-	var (
-		folders []model.Folder
-	)
+	var folders []model.Folder
 	for _, object := range objects {
 		if object.IsDir {
 			folders = append(folders, model.Folder{
@@ -438,7 +440,6 @@ func (fs *FileSystem) CreateDirectory(ctx context.Context, fullPath string) (*mo
 		OwnerID:  fs.User.ID,
 	}
 	_, err := newFolder.Create()
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to create folder: %w", err)
 	}

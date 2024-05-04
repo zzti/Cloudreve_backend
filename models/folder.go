@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"fmt"
 	"path"
 	"time"
 
@@ -24,12 +25,18 @@ type Folder struct {
 
 // Create 创建目录
 func (folder *Folder) Create() (uint, error) {
-	if err := DB.FirstOrCreate(folder, *folder).Error; err != nil {
-		folder.Model = gorm.Model{}
-		err2 := DB.First(folder, *folder).Error
-		return folder.ID, err2
+	fmt.Println("folder create start.", folder.Name)
+	result := DB.Unscoped().Model(&Folder{}).Where(" name = ? AND parent_id = ? AND owner_id = ?", folder.Name, folder.ParentID, folder.OwnerID).Update("deleted_at", nil)
+	// fmt.Println("folder create start2", result)
+	if result.RowsAffected == 0 {
+		fmt.Println("folder not found, creating it")
+		if err := DB.FirstOrCreate(folder, *folder).Error; err != nil {
+			folder.Model = gorm.Model{}
+			err2 := DB.First(folder, *folder).Error
+			fmt.Print(".................................", err2, *folder)
+			return folder.ID, err2
+		}
 	}
-
 	return folder.ID, nil
 }
 
