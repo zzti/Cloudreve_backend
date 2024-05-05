@@ -25,7 +25,7 @@ type Folder struct {
 
 // Create 创建目录
 func (folder *Folder) Create() (uint, error) {
-	fmt.Println("folder create start.", folder.Name)
+	fmt.Println("folder create start.", folder.Name, folder.ID, folder.ParentID, folder.OwnerID)
 	result := DB.Unscoped().Model(&Folder{}).Where(" name = ? AND parent_id = ? AND owner_id = ?", folder.Name, folder.ParentID, folder.OwnerID).Update("deleted_at", nil)
 	// fmt.Println("folder create start2", result)
 	if result.RowsAffected == 0 {
@@ -37,6 +37,8 @@ func (folder *Folder) Create() (uint, error) {
 			return folder.ID, err2
 		}
 	}
+	DB.Where(" name = ? AND parent_id = ? AND owner_id = ?", folder.Name, folder.ParentID, folder.OwnerID).First(&folder)
+	fmt.Println("folder found.", folder.Name, folder.ID, folder.ParentID, folder.OwnerID)
 	return folder.ID, nil
 }
 
