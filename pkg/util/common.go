@@ -14,7 +14,7 @@ func init() {
 
 // RandStringRunes 返回随机字符串
 func RandStringRunes(n int) string {
-	var letterRunes = []rune("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	letterRunes := []rune("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 	b := make([]rune, n)
 	for i := range b {
@@ -40,8 +40,8 @@ func IsInExtensionList(extList []string, fileName string) bool {
 	if len(ext) == 0 {
 		return false
 	}
-
-	if ContainsString(extList, ext[1:]) {
+	// 扩展名匹配,忽略大小写
+	if CaseInSensitiveContainsString(extList, ext[1:], false) {
 		return true
 	}
 
@@ -53,6 +53,22 @@ func ContainsString(s []string, e string) bool {
 	for _, a := range s {
 		if a == e {
 			return true
+		}
+	}
+	return false
+}
+
+// CaseInSensitiveContainsString 返回list中是否包含,考虑大小写
+func CaseInSensitiveContainsString(s []string, e string, caseSensitive bool) bool {
+	for _, a := range s {
+		if caseSensitive {
+			if a == e {
+				return true
+			}
+		} else {
+			if strings.EqualFold(a, e) {
+				return true
+			}
 		}
 	}
 	return false
