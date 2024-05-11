@@ -3,17 +3,18 @@ package wopi
 import (
 	"errors"
 	"fmt"
+	"net/url"
+	"path"
+	"strings"
+	"sync"
+	"time"
+
 	model "github.com/cloudreve/Cloudreve/v3/models"
 	"github.com/cloudreve/Cloudreve/v3/pkg/cache"
 	"github.com/cloudreve/Cloudreve/v3/pkg/hashid"
 	"github.com/cloudreve/Cloudreve/v3/pkg/request"
 	"github.com/cloudreve/Cloudreve/v3/pkg/util"
 	"github.com/gofrs/uuid"
-	"net/url"
-	"path"
-	"strings"
-	"sync"
-	"time"
 )
 
 type Client interface {
@@ -124,15 +125,15 @@ func (c *client) NewSession(uid uint, file *model.File, action ActonType) (*Sess
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	ext := path.Ext(file.Name)
+	// ext := path.Ext(file.Name)
+	// 将文件扩展名统一转换为小写,与wopi接口保持一致,避免因为扩展名大小写不一致导致的wopi无法使用的问题
+	ext := strings.ToLower(path.Ext(file.Name))
 	availableActions, ok := c.actions[ext]
 	if !ok {
 		return nil, ErrActionNotSupported
 	}
 
-	var (
-		actionConfig Action
-	)
+	var actionConfig Action
 	fallbackOrder := []ActonType{action, ActionPreview, ActionPreviewFallback, ActionEdit}
 	for _, a := range fallbackOrder {
 		if actionConfig, ok = availableActions[string(a)]; ok {
