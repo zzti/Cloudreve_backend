@@ -17,8 +17,7 @@ import (
 )
 
 // SettingService 通用设置服务
-type SettingService struct {
-}
+type SettingService struct{}
 
 // SettingListService 通用设置列表服务
 type SettingListService struct {
@@ -149,7 +148,8 @@ func (service *PasswordChange) Update(c *gin.Context, user *model.User) serializ
 	if err := user.Update(map[string]interface{}{"password": user.Password}); err != nil {
 		return serializer.DBErr("Failed to update password", err)
 	}
-
+	// 清除登录凭证
+	util.ClearSession(c)
 	return serializer.Response{}
 }
 
