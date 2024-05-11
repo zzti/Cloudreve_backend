@@ -62,10 +62,13 @@ func ContainsString(s []string, e string) bool {
 func CaseInSensitiveContainsString(s []string, e string, caseSensitive bool) bool {
 	for _, a := range s {
 		if caseSensitive {
-			if a == e {
+			// if a == e {
+			// 字符串比较使用更高效的方法strings.Compare
+			if strings.Compare(a, e) == 0 {
 				return true
 			}
 		} else {
+			// 字符串比较使用更高效的方法strings.EqualFold,该方法不区分大小写
 			if strings.EqualFold(a, e) {
 				return true
 			}
