@@ -33,6 +33,7 @@ func SiteConfig(c *gin.Context) {
 
 	var wopiExts []string
 	if wopi.Default != nil {
+		// 从wopi客户端获取可用的文件扩展名
 		wopiExts = wopi.Default.AvailableExts()
 	}
 
@@ -69,10 +70,10 @@ func Captcha(c *gin.Context) {
 		"captcha_IsShowSineLine",
 	)
 	// 验证码配置
-	var configD = base64Captcha.ConfigCharacter{
+	configD := base64Captcha.ConfigCharacter{
 		Height: model.GetIntSetting("captcha_height", 60),
 		Width:  model.GetIntSetting("captcha_width", 240),
-		//const CaptchaModeNumber:数字,CaptchaModeAlphabet:字母,CaptchaModeArithmetic:算术,CaptchaModeNumberAlphabet:数字字母混合.
+		// const CaptchaModeNumber:数字,CaptchaModeAlphabet:字母,CaptchaModeArithmetic:算术,CaptchaModeNumberAlphabet:数字字母混合.
 		Mode:               model.GetIntSetting("captcha_mode", 3),
 		ComplexOfNoiseText: model.GetIntSetting("captcha_ComplexOfNoiseText", 0),
 		ComplexOfNoiseDot:  model.GetIntSetting("captcha_ComplexOfNoiseDot", 0),
