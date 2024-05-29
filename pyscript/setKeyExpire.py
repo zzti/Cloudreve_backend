@@ -10,7 +10,7 @@ def setExpiredKeys():
             #执行redis命令
             #keyttl = redisclient.execute_command('ttl', key)
             #if keyttl == -1: # 此处扫到key，可以进行导出处理或者执行命令
-            #redisclient.expire(key, 7200)
+            redisclient.expire(key, 7200)
     except Exception as e:
         raise e
 if __name__ == '__main__':
