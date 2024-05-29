@@ -1,10 +1,11 @@
 package middleware
 
 import (
-	"github.com/cloudreve/Cloudreve/v3/pkg/cache"
-	"github.com/cloudreve/Cloudreve/v3/pkg/sessionstore"
 	"net/http"
 	"strings"
+
+	"github.com/cloudreve/Cloudreve/v3/pkg/cache"
+	"github.com/cloudreve/Cloudreve/v3/pkg/sessionstore"
 
 	"github.com/cloudreve/Cloudreve/v3/pkg/conf"
 	"github.com/cloudreve/Cloudreve/v3/pkg/serializer"
@@ -36,7 +37,7 @@ func Session(secret string) gin.HandlerFunc {
 	// Also set Secure: true if using SSL, you should though
 	Store.Options(sessions.Options{
 		HttpOnly: true,
-		MaxAge:   60 * 86400,
+		MaxAge:   7 * 86400,
 		Path:     "/",
 		SameSite: sameSiteMode,
 		Secure:   conf.CORSConfig.Secure,
