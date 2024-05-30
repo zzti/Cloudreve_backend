@@ -23,7 +23,7 @@ func InitApplication() {
 ================================================
 
 `)
-	go CheckUpdate()
+	// go CheckUpdate()
 }
 
 type GitHubRelease struct {
@@ -54,5 +54,4 @@ func CheckUpdate() {
 			util.Log().Info("有新的版本 [%s] 可用，下载：%s", list[0].Name, list[0].URL)
 		}
 	}
-
 }
