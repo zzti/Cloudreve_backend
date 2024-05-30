@@ -5,12 +5,12 @@ def setExpiredKeys():
             redisclient = StrictRedis(host=redis_host, port=redis_port,db=1)
         else:
             redisclient = StrictRedis(host=redis_host, port=redis_port, password=redis_pass, db=1)
-        for key in redisclient.scan_iter(match="cd_session_*",count=10):
+        for key in redisclient.scan_iter(match="cd_session_*"):
             print(key)
             #执行redis命令
             #keyttl = redisclient.execute_command('ttl', key)
             #if keyttl == -1: # 此处扫到key，可以进行导出处理或者执行命令
-            redisclient.expire(key, 7200)
+            redisclient.expire(key, 10)
     except Exception as e:
         raise e
 if __name__ == '__main__':
