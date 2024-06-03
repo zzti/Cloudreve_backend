@@ -1,6 +1,9 @@
 package routers
 
 import (
+	"io"
+	"os"
+
 	"github.com/cloudreve/Cloudreve/v3/middleware"
 	"github.com/cloudreve/Cloudreve/v3/pkg/auth"
 	"github.com/cloudreve/Cloudreve/v3/pkg/cache"
@@ -23,7 +26,6 @@ func InitRouter() *gin.Engine {
 	}
 	util.Log().Info("Current running mode: Slave.")
 	return InitSlaveRouter()
-
 }
 
 // InitSlaveRouter 初始化从机模式路由
@@ -116,6 +118,14 @@ func InitCORS(router *gin.Engine) {
 
 // InitMasterRouter 初始化主机模式路由
 func InitMasterRouter() *gin.Engine {
+	// 日志文件不需要颜色
+	gin.DisableConsoleColor()
+
+	// 创建日志文件并设置为 gin.DefaultWriter
+	f, _ := os.Create("gin.log")
+
+	// 同时写入日志文件和控制台
+	gin.DefaultWriter = io.MultiWriter(f, os.Stdout)
 	r := gin.Default()
 
 	/*
