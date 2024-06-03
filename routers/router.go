@@ -122,8 +122,11 @@ func InitMasterRouter() *gin.Engine {
 	gin.DisableConsoleColor()
 
 	// 创建日志文件并设置为 gin.DefaultWriter
-	f, _ := os.Create("gin.log")
-
+	f, err := os.Create("gin.log")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
 	// 同时写入日志文件和控制台
 	gin.DefaultWriter = io.MultiWriter(f, os.Stdout)
 	r := gin.Default()
