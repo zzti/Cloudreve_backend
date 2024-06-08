@@ -1,9 +1,12 @@
 package routers
 
 import (
+	"context"
+	"fmt"
 	"io"
 	"os"
 
+	"github.com/axiaoxin-com/logging"
 	"github.com/cloudreve/Cloudreve/v3/middleware"
 	"github.com/cloudreve/Cloudreve/v3/pkg/auth"
 	"github.com/cloudreve/Cloudreve/v3/pkg/cache"
@@ -16,6 +19,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // InitRouter 初始化路由
@@ -121,6 +125,8 @@ func InitMasterRouter() *gin.Engine {
 	// 日志文件不需要颜色
 	gin.DisableConsoleColor()
 
+	gin.SetMode(gin.ReleaseMode)
+
 	// 创建日志文件并设置为 gin.DefaultWriter
 	f, err := os.Create("gin.log")
 	if err != nil {
@@ -129,8 +135,23 @@ func InitMasterRouter() *gin.Engine {
 	defer f.Close()
 	// 同时写入日志文件和控制台
 	gin.DefaultWriter = io.MultiWriter(f, os.Stdout)
-	r := gin.Default()
-
+	// r := gin.WithWriter(io.MultiWriter(f, os.Stdout))
+	// r := gin.Default()
+	r := gin.New()
+	ginConf := logging.GinLoggerConfig{
+		Formatter: func(c context.Context, m logging.GinLogDetails) string {
+			// fmt.Println(c)
+			// 格式化日志
+			return fmt.Sprintf("%s use %s request %s at %v, handler %s use %f seconds to respond it with %d",
+				m.ClientIP, m.Method, m.RequestURI, m.ReqTime, m.HandlerName, m.Latency, m.StatusCode)
+		},
+		SkipPaths:           []string{},
+		EnableDetails:       false,
+		EnableContextKeys:   true,
+		EnableRequestHeader: false,
+		TraceIDFunc:         func(context.Context) string { return uuid.NewString() },
+	}
+	r.Use(logging.GinLoggerWithConfig(ginConf))
 	/*
 		静态资源
 	*/
