@@ -3,8 +3,6 @@ package routers
 import (
 	"context"
 	"fmt"
-	"io"
-	"os"
 
 	"github.com/axiaoxin-com/logging"
 	"github.com/cloudreve/Cloudreve/v3/middleware"
@@ -128,16 +126,26 @@ func InitMasterRouter() *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 
 	// 创建日志文件并设置为 gin.DefaultWriter
-	f, err := os.Create("gin.log")
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
+	//f, err := os.Create("gin.log")
+	//if err != nil {
+	//	panic(err)
+	//}
+	//defer f.Close()
 	// 同时写入日志文件和控制台
-	gin.DefaultWriter = io.MultiWriter(f, os.Stdout)
+	//gin.DefaultWriter = io.MultiWriter(f, os.Stdout)
 	// r := gin.WithWriter(io.MultiWriter(f, os.Stdout))
 	// r := gin.Default()
 	r := gin.New()
+
+	// scheme 为 lumberjack ，日志文件为 /logs/x.log , 保存 7 天，保留 10 份文件，文件大小超过 100M ，使用压缩备份，压缩文件名使用 localtime
+	sink := logging.NewLumberjackSink("lumberjack", "./logs/x.log", 7, 10, 100, true, true)
+	options := logging.Options{
+		LumberjackSink: sink,
+		// 使用 sink 中设置的 scheme 即 lumberjack: 或 lumberjack:// 并指定保存日志到指定文件，日志文件将自动按 LumberjackSink 的配置做 rotate
+		OutputPaths: []string{"lumberjack:"},
+	}
+	logger, _ := logging.NewLogger(options)
+	logging.ReplaceLogger(logger)
 	ginConf := logging.GinLoggerConfig{
 		Formatter: func(c context.Context, m logging.GinLogDetails) string {
 			// fmt.Println(c)
