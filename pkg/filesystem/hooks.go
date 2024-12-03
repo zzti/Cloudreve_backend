@@ -2,6 +2,12 @@ package filesystem
 
 import (
 	"context"
+	"io/ioutil"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+
 	model "github.com/cloudreve/Cloudreve/v3/models"
 	"github.com/cloudreve/Cloudreve/v3/pkg/cache"
 	"github.com/cloudreve/Cloudreve/v3/pkg/cluster"
@@ -9,11 +15,6 @@ import (
 	"github.com/cloudreve/Cloudreve/v3/pkg/filesystem/fsctx"
 	"github.com/cloudreve/Cloudreve/v3/pkg/serializer"
 	"github.com/cloudreve/Cloudreve/v3/pkg/util"
-	"io/ioutil"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
 )
 
 // Hook 钩子函数
@@ -47,7 +48,7 @@ func (fs *FileSystem) Trigger(ctx context.Context, name string, file fsctx.FileH
 		for _, hook := range hooks {
 			err := hook(ctx, fs, file)
 			if err != nil {
-				util.Log().Warning("Failed to execute hook：%s", err)
+				util.Log().Warning("Failed to execute hook,%s：%s", name, err)
 				return err
 			}
 		}
@@ -75,7 +76,6 @@ func HookValidateFile(ctx context.Context, fs *FileSystem, file fsctx.FileHeader
 	}
 
 	return nil
-
 }
 
 // HookResetPolicy 重设存储策略为上下文已有文件
