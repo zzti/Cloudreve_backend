@@ -1,36 +1,38 @@
-env:
-  - CI=false
-  - GENERATE_SOURCEMAP=false
+env:							#全局环境变量 (env)
+  - CI=false						# 设置环境变量 CI 为 false
+  - GENERATE_SOURCEMAP=false	# 前端构建时不生成 source map（减小体积，防止源码泄露）
 before:
-  hooks:
-    - go mod tidy
-    - sh -c "cd assets && rm -rf build && yarn install --network-timeout 1000000 && yarn run build && cd ../ && zip -r - assets/build >assets.zip"
-builds:
+  hooks:						#编译前的前置动作 (before.hooks)
+    - go mod tidy					# 整理 Go 依赖，确保 go.mod 和 go.sum 是一致的
+    #- sh -c "cd assets && rm -rf build && yarn install --network-timeout 1000000 && yarn run build && cd ../ && zip -r - assets/build >assets.zip"
+    - go run goscript/build_assets.go
+builds:						#编译配置 (builds)
   -
     env:
-      - CGO_ENABLED=0
+      - CGO_ENABLED=0			# 禁用 CGO，实现静态编译，生成的程序不依赖系统动态库（跨发行版运行的关键）
 
-    binary: cloudreve
+    binary: cloudreve				# 编译出的二进制文件名
 
-    ldflags:
-      - -X 'github.com/cloudreve/Cloudreve/v3/pkg/conf.BackendVersion={{.Tag}}' -X 'github.com/cloudreve/Cloudreve/v3/pkg/conf.LastCommit={{.ShortCommit}}'
+    ldflags:						# ldflags：在编译时向 Go 代码注入变量，{{.Tag}}：当前 Git 标签（版本号），{{.ShortCommit}}：当前提交的哈希值前 7 位
+      - -X 'github.com/cloudreve/Cloudreve/v3/pkg/conf.BackendVersion={{.Tag}}' 
+      - -X 'github.com/cloudreve/Cloudreve/v3/pkg/conf.LastCommit={{.ShortCommit}}'
 
-    goos:
+    goos:						# 需要编译的目标操作系统
       - linux
       - windows
       - darwin
 
-    goarch:
+    goarch:					# 需要编译的目标 CPU 架构
       - amd64
       - arm
       - arm64
 
-    goarm:
+    goarm:					# 针对 ARM 架构的具体版本优化
       - 5
       - 6
       - 7
 
-    ignore:
+    ignore:					#忽略不合理的组合（例如 Windows 没有旧版的 ARM 5/6/7）
       - goos: windows
         goarm: 5
       - goos: windows
@@ -38,20 +40,20 @@ builds:
       - goos: windows
         goarm: 7
 
-archives:
-  - format: tar.gz
+archives:						#归档/打包配置 (archives)
+  - format: tar.gz					# 默认使用 .tar.gz 压缩格式
     # this name template makes the OS and Arch compatible with the results of uname.
-    name_template: >-
+    name_template: >-				# 文件命名模板，例如：cloudreve_v3.8.0_linux_amd64.tar.gz
       cloudreve_{{.Tag}}_{{- .Os }}_{{ .Arch }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
     # use zip for windows archives
-    format_overrides:
+    format_overrides:				# 格式覆盖：如果是 Windows，则改用 .zip 格式
     - goos: windows
       format: zip
-checksum:
-  name_template: 'checksums.txt'
+checksum:					#校验和 (checksum)
+  name_template: 'checksums.txt'	# 生成一个包含所有包哈希值的文件，用于用户校验文件完整性
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  name_template: "{{ incpatch .Version }}-next"	# 如果没有 Tag 时运行，生成的临时版本号格式
 changelog:
   sort: asc
   filters:
@@ -59,16 +61,16 @@ changelog:
       - '^docs:'
       - '^test:'
 
-release:
-  draft: true
-  prerelease: auto
-  target_commitish: '{{ .Commit }}'
-  name_template: "{{.Version}}"
+release:					#发布设置 (release)
+  draft: true					# 发布到 GitHub 时先存为“草稿”，不直接公开
+  prerelease: auto				# 如果 Tag 包含 rc/beta 等字样，自动设为“预发布版”
+  target_commitish: '{{ .Commit }}'	# 指向当前提交
+  name_template: "{{.Version}}"		# 发布标题为版本号
 
 dockers:
   -
     dockerfile: Dockerfile
-    use: buildx
+    use: buildx				# 使用 Docker buildx 引擎支持多平台构建
     build_flag_templates:
       - "--platform=linux/amd64"
     goos: linux
