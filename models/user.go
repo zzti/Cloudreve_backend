@@ -38,6 +38,9 @@ type User struct {
 	Avatar    string
 	Options   string `json:"-" gorm:"size:4294967295"`
 	Authn     string `gorm:"size:4294967295"`
+	// GORM默认按snake_case规则映射出来的数据库列名，LoginErrorCount会自动映射成login_error_count
+	// 也可以在tag里面显示指定：LoginErrorCount uint `gorm:"column:login_error_count;default:0"`
+	LoginErrorCount uint `gorm:"default:0"`
 
 	// 关联模型
 	Group  Group  `gorm:"save_associations:false:false"`
@@ -297,4 +300,9 @@ func (user *User) UpdateOptions() error {
 		return err
 	}
 	return user.Update(map[string]interface{}{"options": user.Options})
+}
+
+func (user *User) IncLoginErrorCount() {
+	user.LoginErrorCount++
+	DB.Model(user).Update("login_error_count", gorm.Expr("login_error_count + ?", 1))
 }

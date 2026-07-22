@@ -2,6 +2,8 @@ package user
 
 import (
 	"fmt"
+	"net/url"
+
 	model "github.com/cloudreve/Cloudreve/v3/models"
 	"github.com/cloudreve/Cloudreve/v3/pkg/auth"
 	"github.com/cloudreve/Cloudreve/v3/pkg/cache"
@@ -12,7 +14,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"github.com/pquerna/otp/totp"
-	"net/url"
 )
 
 // UserLoginService 管理用户登录的服务
@@ -112,7 +113,7 @@ func (service *Enable2FA) Login(c *gin.Context) serializer.Response {
 			return serializer.Err(serializer.Code2FACodeErr, "2FA code not correct", nil)
 		}
 
-		//登陆成功，清空并设置session
+		// 登陆成功，清空并设置session
 		util.DeleteSession(c, "2fa_user_id")
 		util.SetSession(c, map[string]interface{}{
 			"user_id": expectedUser.ID,
@@ -131,16 +132,21 @@ func (service *UserLoginService) Login(c *gin.Context) serializer.Response {
 	if err != nil {
 		return serializer.Err(serializer.CodeCredentialInvalid, "Wrong password or email address", err)
 	}
-	if authOK, _ := expectedUser.CheckPassword(service.Password); !authOK {
-		return serializer.Err(serializer.CodeCredentialInvalid, "Wrong password or email address", nil)
-	}
 	if expectedUser.Status == model.Baned || expectedUser.Status == model.OveruseBaned {
 		return serializer.Err(serializer.CodeUserBaned, "This account has been blocked", nil)
 	}
 	if expectedUser.Status == model.NotActivicated {
 		return serializer.Err(serializer.CodeUserNotActivated, "This account is not activated", nil)
 	}
-
+	if authOK, _ := expectedUser.CheckPassword(service.Password); !authOK {
+		expectedUser.IncLoginErrorCount()
+		// 连续错误登录次数超过5次限制，封禁用户
+		if expectedUser.LoginErrorCount >= 5 {
+			expectedUser.SetStatus(model.OveruseBaned)
+			return serializer.Err(serializer.CodeUserBaned, "This account has been blocked", nil)
+		}
+		return serializer.Err(serializer.CodeCredentialInvalid, "Wrong password or email address", nil)
+	}
 	if expectedUser.TwoFactor != "" {
 		// 需要二步验证
 		util.SetSession(c, map[string]interface{}{
@@ -149,13 +155,12 @@ func (service *UserLoginService) Login(c *gin.Context) serializer.Response {
 		return serializer.Response{Code: 203}
 	}
 
-	//登陆成功，清空并设置session
+	// 登陆成功，清空并设置session
 	util.SetSession(c, map[string]interface{}{
 		"user_id": expectedUser.ID,
 	})
 
 	return serializer.BuildUserResponse(expectedUser)
-
 }
 
 // CopySessionService service for copy user session
