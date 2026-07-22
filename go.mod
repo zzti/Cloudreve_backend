@@ -31,7 +31,7 @@ require (
 	github.com/mholt/archiver/v4 v4.0.0-alpha.6
 	github.com/mojocn/base64Captcha v0.0.0-20190801020520-752b1cd608b2
 	github.com/pkg/errors v0.9.1
-	github.com/pquerna/otp v1.2.0
+	github.com/pquerna/otp v1.5.0
 	github.com/qiniu/go-sdk/v7 v7.11.1
 	github.com/rafaeljusto/redigomock v0.0.0-20191117212112-00b2509252a1
 	github.com/robfig/cron/v3 v3.0.1

@@ -215,7 +215,8 @@ func InitMasterRouter() *gin.Engine {
 			// 用户登录
 			user.POST("session", middleware.CaptchaRequired("login_captcha"), controllers.UserLogin)
 			// 用户注册
-			user.POST("",
+			user.POST(
+				"",
 				middleware.IsFunctionEnabled("register_enabled"),
 				middleware.CaptchaRequired("reg_captcha"),
 				controllers.UserRegister,
@@ -227,28 +228,33 @@ func InitMasterRouter() *gin.Engine {
 			// 通过邮件里的链接重设密码
 			user.PATCH("reset", controllers.UserReset)
 			// 邮件激活
-			user.GET("activate/:id",
+			user.GET(
+				"activate/:id",
 				middleware.SignRequired(auth.General),
 				middleware.HashID(hashid.UserID),
 				controllers.UserActivate,
 			)
 			// WebAuthn登陆初始化
-			user.GET("authn/:username",
+			user.GET(
+				"authn/:username",
 				middleware.IsFunctionEnabled("authn_enabled"),
 				controllers.StartLoginAuthn,
 			)
 			// WebAuthn登陆
-			user.POST("authn/finish/:username",
+			user.POST(
+				"authn/finish/:username",
 				middleware.IsFunctionEnabled("authn_enabled"),
 				controllers.FinishLoginAuthn,
 			)
 			// 获取用户主页展示用分享
-			user.GET("profile/:id",
+			user.GET(
+				"profile/:id",
 				middleware.HashID(hashid.UserID),
 				controllers.GetUserShare,
 			)
 			// 获取用户头像
-			user.GET("avatar/:id/:size",
+			user.GET(
+				"avatar/:id/:size",
 				middleware.HashID(hashid.UserID),
 				middleware.StaticResourceCache(),
 				controllers.GetUserAvatar,
@@ -262,7 +268,8 @@ func InitMasterRouter() *gin.Engine {
 			file := sign.Group("file")
 			{
 				// 文件外链（直接输出文件数据）
-				file.GET("get/:id/:name",
+				file.GET(
+					"get/:id/:name",
 					middleware.Sandbox(),
 					middleware.StaticResourceCache(),
 					controllers.AnonymousGetContent,
@@ -270,7 +277,8 @@ func InitMasterRouter() *gin.Engine {
 				// 文件外链(301跳转)
 				file.GET("source/:id/:name", controllers.AnonymousPermLinkDeprecated)
 				// 下载文件
-				file.GET("download/:id",
+				file.GET(
+					"download/:id",
 					middleware.StaticResourceCache(),
 					controllers.Download,
 				)
@@ -381,13 +389,15 @@ func InitMasterRouter() *gin.Engine {
 			// 获取分享
 			share.GET("info/:id", controllers.GetShare)
 			// 创建文件下载会话
-			share.PUT("download/:id",
+			share.PUT(
+				"download/:id",
 				middleware.CheckShareUnlocked(),
 				middleware.BeforeShareDownload(),
 				controllers.GetShareDownload,
 			)
 			// 预览分享文件
-			share.GET("preview/:id",
+			share.GET(
+				"preview/:id",
 				middleware.CSRFCheck(),
 				middleware.CheckShareUnlocked(),
 				middleware.ShareCanPreview(),
@@ -395,41 +405,48 @@ func InitMasterRouter() *gin.Engine {
 				controllers.PreviewShare,
 			)
 			// 取得Office文档预览地址
-			share.GET("doc/:id",
+			share.GET(
+				"doc/:id",
 				middleware.CheckShareUnlocked(),
 				middleware.ShareCanPreview(),
 				middleware.BeforeShareDownload(),
 				controllers.GetShareDocPreview,
 			)
 			// 获取文本文件内容
-			share.GET("content/:id",
+			share.GET(
+				"content/:id",
 				middleware.CheckShareUnlocked(),
 				middleware.BeforeShareDownload(),
 				controllers.PreviewShareText,
 			)
 			// 分享目录列文件
-			share.GET("list/:id/*path",
+			share.GET(
+				"list/:id/*path",
 				middleware.CheckShareUnlocked(),
 				controllers.ListSharedFolder,
 			)
 			// 分享目录搜索
-			share.GET("search/:id/:type/:keywords",
+			share.GET(
+				"search/:id/:type/:keywords",
 				middleware.CheckShareUnlocked(),
 				controllers.SearchSharedFolder,
 			)
 			// 归档打包下载
-			share.POST("archive/:id",
+			share.POST(
+				"archive/:id",
 				middleware.CheckShareUnlocked(),
 				middleware.BeforeShareDownload(),
 				controllers.ArchiveShare,
 			)
 			// 获取README文本文件内容
-			share.GET("readme/:id",
+			share.GET(
+				"readme/:id",
 				middleware.CheckShareUnlocked(),
 				controllers.PreviewShareReadme,
 			)
 			// 获取缩略图
-			share.GET("thumb/:id/:file",
+			share.GET(
+				"thumb/:id/:file",
 				middleware.CheckShareUnlocked(),
 				middleware.ShareCanPreview(),
 				controllers.ShareThumb,
@@ -636,6 +653,7 @@ func InitMasterRouter() *gin.Engine {
 					// 设定为Gravatar头像
 					setting.PUT("avatar", controllers.UseGravatar)
 					// 更改用户设定
+					//":option" 在 Gin 路由里是一个路径参数占位符，意思是“这一段可以是任意值，并且把它当成变量传给处理函数”。
 					setting.PATCH(":option", controllers.UpdateOption)
 					// 获得二步验证初始化信息
 					setting.GET("2fa", controllers.UserInit2FA)
@@ -732,13 +750,15 @@ func InitMasterRouter() *gin.Engine {
 				// 列出我的分享
 				share.GET("", controllers.ListShare)
 				// 更新分享属性
-				share.PATCH(":id",
+				share.PATCH(
+					":id",
 					middleware.ShareAvailable(),
 					middleware.ShareOwner(),
 					controllers.UpdateShare,
 				)
 				// 删除分享
-				share.DELETE(":id",
+				share.DELETE(
+					":id",
 					controllers.DeleteShare,
 				)
 			}

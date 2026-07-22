@@ -56,8 +56,9 @@ type HomePage struct {
 
 // PasswordChange 更改密码
 type PasswordChange struct {
-	Old string `json:"old" binding:"required,min=4,max=64"`
-	New string `json:"new" binding:"required,min=4,max=64"`
+	Old      string `json:"old" binding:"required,min=4,max=64"`
+	New      string `json:"new" binding:"required,min=4,max=64"`
+	AuthCode string `json:"auth_code" binding:"omitempty,len=6"`
 }
 
 // Enable2FA 开启二步验证
@@ -138,6 +139,15 @@ func (service *SettingService) Init2FA(c *gin.Context, user *model.User) seriali
 
 // Update 更改密码
 func (service *PasswordChange) Update(c *gin.Context, user *model.User) serializer.Response {
+	// 如果用户开启了二步验证，则需要验证二步验证码
+	if user.TwoFactor != "" {
+		// if ok, _ := user.CheckAuthcode(service.AuthCode); !ok {
+		// 	return serializer.ParamErr("Incorrect 2FA code", nil)
+		// }
+		if !totp.Validate(service.AuthCode, user.TwoFactor) {
+			return serializer.ParamErr("Incorrect 2FA code", nil)
+		}
+	}
 	// 验证老密码
 	if ok, _ := user.CheckPassword(service.Old); !ok {
 		return serializer.Err(serializer.CodeIncorrectPassword, "", nil)

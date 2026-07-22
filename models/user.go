@@ -106,7 +106,6 @@ func (user *User) IncreaseStorageWithoutCheck(size uint64) {
 	}
 	user.Storage += size
 	DB.Model(user).Update("storage", gorm.Expr("storage + ?", size))
-
 }
 
 // GetRemainingCapacity 获取剩余配额
@@ -198,7 +197,7 @@ func (user *User) AfterFind() (err error) {
 	return err
 }
 
-//SerializeOptions 将序列后的Option写入到数据库字段
+// SerializeOptions 将序列后的Option写入到数据库字段
 func (user *User) SerializeOptions() (err error) {
 	optionsValue, err := json.Marshal(&user.OptionsSerialized)
 	user.Options = string(optionsValue)
@@ -207,7 +206,6 @@ func (user *User) SerializeOptions() (err error) {
 
 // CheckPassword 根据明文校验密码
 func (user *User) CheckPassword(password string) (bool, error) {
-
 	// 根据存储密码拆分为 Salt 和 Digest
 	passwordStore := strings.Split(user.Password, ":")
 	if len(passwordStore) != 2 && len(passwordStore) != 3 {
@@ -228,7 +226,7 @@ func (user *User) CheckPassword(password string) (bool, error) {
 		return bs == passwordStore[1], nil
 	}
 
-	//计算 Salt 和密码组合的SHA1摘要
+	// 计算 Salt 和密码组合的SHA1摘要
 	hash := sha1.New()
 	_, err := hash.Write([]byte(password + passwordStore[0]))
 	bs := hex.EncodeToString(hash.Sum(nil))
@@ -241,10 +239,10 @@ func (user *User) CheckPassword(password string) (bool, error) {
 
 // SetPassword 根据给定明文设定 User 的 Password 字段
 func (user *User) SetPassword(password string) error {
-	//生成16位 Salt
+	// 生成16位 Salt
 	salt := util.RandStringRunes(16)
 
-	//计算 Salt 和密码组合的SHA1摘要
+	// 计算 Salt 和密码组合的SHA1摘要
 	hash := sha1.New()
 	_, err := hash.Write([]byte(password + salt))
 	bs := hex.EncodeToString(hash.Sum(nil))
@@ -253,9 +251,21 @@ func (user *User) SetPassword(password string) error {
 		return err
 	}
 
-	//存储 Salt 值和摘要， ":"分割
+	// 存储 Salt 值和摘要， ":"分割
 	user.Password = salt + ":" + string(bs)
 	return nil
+}
+
+// CheckAuthcode 检查用户的二次验证代码
+func (user *User) CheckAuthcode(code string) (bool, error) {
+	ok, err := util.VerifyAuthcode(code, user.TwoFactor)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, errors.New("Invalid two-factor authentication code")
+	}
+	return true, nil
 }
 
 // NewAnonymousUser 返回一个匿名用户

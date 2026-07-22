@@ -6,6 +6,9 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/pquerna/otp"
+	"github.com/pquerna/otp/totp"
 )
 
 func init() {
@@ -140,4 +143,16 @@ func SliceDifference(slice1, slice2 []string) []string {
 		}
 	}
 	return nn
+}
+
+// 校验二次验证代码是否一致
+// 因为用户手机时间可能与服务器不完全同步，通常允许前后 1 个步长（即允许 30 秒的误差）
+func VerifyAuthcode(passcode string, secret string) (bool, error) {
+	valid, err := totp.ValidateCustom(passcode, secret, time.Now().UTC(), totp.ValidateOpts{
+		Period:    30,                // 每 30 秒生成一个新的验证码
+		Skew:      1,                 // 允许偏差量：1 表示允许当前时间、前 30 秒、后 30 秒生成的验证码
+		Digits:    6,                 // 6 位数字
+		Algorithm: otp.AlgorithmSHA1, // 标准算法是 SHA1
+	})
+	return valid, err
 }
